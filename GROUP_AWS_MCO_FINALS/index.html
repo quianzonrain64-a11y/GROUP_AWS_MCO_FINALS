@@ -1,0 +1,2705 @@
+<!DOCTYPE html>
+<!--
+  CampusVote - all six screens in one page. Only one is visible at a time, so
+  switching tabs never drops the wallet connection.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CampusVote | Student Council Election</title>
+
+    <!-- The whole stylesheet, pasted in so this file works on its own. -->
+    <style>
+/* CampusVote stylesheet, plain CSS, no framework.
+   Change a value in the token block and the whole page follows. */
+
+/* Colours, widths, radii and fonts, declared once. */
+:root {
+  /* page and cards */
+  --paper: #f1eee7;
+  --surface: #ffffff;
+  --surface-tint: #fdfbf7;
+
+  /* text */
+  --ink: #1a1d22;
+  --ink-soft: #5a6472;
+  --ink-faint: #8c8578;
+
+  /* borders */
+  --line: #e2ddd2;
+  --line-strong: #cfc8b9;
+
+  /* school maroon plus the gold accent */
+  --brand: #7a1f2b;
+  --brand-dark: #5b1620;
+  --brand-soft: #fbf1f2;
+  --gold: #a8813a;
+
+  /* status colours */
+  --green: #2c6a45;
+  --red: #a33131;
+
+  /* layout */
+  --shell: 1400px;
+  --gutter: clamp(20px, 2.6vw, 44px);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow-card: 0 1px 2px rgba(26, 29, 34, 0.05),
+    0 18px 36px -28px rgba(26, 29, 34, 0.35);
+  --shadow-pop: 0 14px 38px rgba(26, 29, 34, 0.18);
+
+  /* fonts */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial,
+    sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+    "Times New Roman", serif;
+  --font-mono: "Cascadia Mono", Consolas, "Courier New", monospace;
+}
+
+/* Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+
+  margin: 0;
+
+  background-color: var(--paper);
+  background-image: radial-gradient(
+      1200px 480px at 50% -200px,
+      rgba(122, 31, 43, 0.07),
+      transparent 70%
+    ),
+    radial-gradient(
+      900px 380px at 100% 0%,
+      rgba(168, 129, 58, 0.09),
+      transparent 65%
+    );
+  background-repeat: no-repeat;
+
+  font-family: var(--font-ui);
+
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--ink);
+
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Thin maroon to gold line at the very top of the window. */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand), var(--gold));
+  z-index: 60;
+  pointer-events: none;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.22;
+  margin: 0;
+  color: var(--ink);
+}
+
+p {
+  margin: 0 0 12px;
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+::selection {
+  background: rgba(122, 31, 43, 0.14);
+}
+
+/* Makes hidden win over any display rule below. */
+[hidden] {
+  display: none !important;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+}
+
+/* Sticky top bar: brand row plus tab row. */
+.masthead {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+
+  border-bottom: 1px solid var(--line);
+}
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 15px var(--gutter);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: linear-gradient(155deg, #8d2433, var(--brand-dark));
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 17px;
+  letter-spacing: 0.06em;
+
+  box-shadow: 0 8px 16px -10px rgba(122, 31, 43, 0.95),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.brand-text h1 {
+  font-size: 21px;
+  letter-spacing: -0.01em;
+}
+
+.brand-sub {
+  margin: 1px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+}
+
+.wallet-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.network-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.network-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  box-shadow: 0 0 0 3px rgba(140, 133, 120, 0.16);
+}
+
+.network-badge.is-good {
+  border-color: #cfe3d7;
+  background: #f4faf6;
+  color: var(--green);
+}
+
+.network-badge.is-good::before {
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(44, 106, 69, 0.16);
+}
+
+.wallet-status {
+  padding: 6px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-tint);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* Six pills on one row. Scrolls sideways on a phone. */
+.tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 0 var(--gutter) 12px;
+
+  overflow-x: auto;
+
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  padding: 9px 17px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+
+  white-space: nowrap;
+  transition: color 140ms ease, background-color 140ms ease,
+    border-color 140ms ease;
+}
+
+.tab:hover {
+  background: #f5f2ea;
+  color: var(--ink);
+}
+
+.tab.is-active {
+  background: var(--brand-soft);
+  border-color: #efd7da;
+  color: var(--brand);
+}
+
+.tab:focus-visible {
+  outline: 2px solid rgba(122, 31, 43, 0.35);
+  outline-offset: 2px;
+}
+
+/* Election state, repeated on every screen. */
+.status-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+
+  width: 100%;
+  max-width: var(--shell);
+  margin: 22px auto 0;
+  padding: 12px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.status-readouts {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.pill::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pill-closed {
+  background: #fbecec;
+  border-color: #f2d2d2;
+  color: var(--red);
+}
+
+.pill-open {
+  background: #edf7f1;
+  border-color: #cbe4d6;
+  color: var(--green);
+}
+
+.pill-open::before {
+  animation: pill-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes pill-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(44, 106, 69, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(44, 106, 69, 0);
+  }
+}
+
+.status-total {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+
+  font-variant-numeric: tabular-nums;
+}
+
+/* Only appears when no contract address is known yet. */
+.setup-panel {
+  width: 100%;
+  max-width: var(--shell);
+  margin: 18px auto 0;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffdf7, #fdf9ef);
+  box-shadow: var(--shadow-card);
+}
+
+.setup-text h2 {
+  font-size: 19px;
+  margin-bottom: 7px;
+}
+
+.setup-text p {
+  font-size: 14px;
+  color: var(--ink-soft);
+  max-width: 78ch;
+}
+
+.setup-form {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.setup-form input {
+  flex: 1 1 340px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.link-button {
+  margin-left: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: var(--brand-dark);
+}
+
+/* The one column every screen sits in. */
+.page {
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 28px var(--gutter) 56px;
+  overflow-x: hidden;
+}
+
+.view {
+  display: none;
+}
+
+.view.is-active {
+  display: block;
+
+  animation: view-fade 200ms ease-out;
+}
+
+@keyframes view-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Heading block that opens a screen. */
+.page-head {
+  max-width: 82ch;
+  margin-bottom: 26px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 8px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.eyebrow::before {
+  content: "";
+  width: 20px;
+  height: 1px;
+  background: var(--gold);
+  flex: 0 0 auto;
+}
+
+.page-head h2 {
+  font-size: clamp(26px, 2.3vw, 33px);
+  letter-spacing: -0.012em;
+  margin-bottom: 10px;
+}
+
+.lede {
+  max-width: 74ch;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.stack {
+  display: grid;
+  gap: 22px;
+}
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 26px;
+}
+
+.card-muted {
+  background: linear-gradient(180deg, #fffdf9, #fdfaf4);
+}
+
+.card-narrow {
+  max-width: 620px;
+}
+
+.card-title {
+  font-size: 18.5px;
+  letter-spacing: -0.005em;
+  margin-bottom: 16px;
+}
+
+.card-hint {
+  margin: -10px 0 18px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.meta-line {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+}
+
+.empty-note {
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  padding: 22px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 650;
+  line-height: 1.4;
+  cursor: pointer;
+
+  user-select: none;
+  transition: background-color 140ms ease, border-color 140ms ease,
+    color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #882433, var(--brand));
+  color: #fff;
+  box-shadow: 0 10px 20px -14px rgba(122, 31, 43, 0.95),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(180deg, var(--brand), var(--brand-dark));
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+.btn-ghost {
+  background: #fff;
+  border-color: var(--line-strong);
+  color: var(--ink-soft);
+}
+
+.btn-ghost:hover {
+  border-color: #b8ae9b;
+  color: var(--ink);
+  background: #fffdf8;
+}
+
+.btn-danger {
+  background: #fff;
+  border-color: #e2b9b9;
+  color: var(--red);
+}
+
+.btn-danger:hover {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.btn-block {
+  display: flex;
+  width: 100%;
+  margin-top: 18px;
+}
+
+.btn-wide {
+  display: flex;
+  width: 100%;
+  max-width: 380px;
+  margin: 24px auto 0;
+  padding: 13px 18px;
+  font-size: 14px;
+}
+
+.btn-small {
+  padding: 7px 13px;
+  font-size: 12.5px;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid rgba(122, 31, 43, 0.4);
+  outline-offset: 2px;
+}
+
+.button-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.button-row .btn {
+  flex: 1 1 140px;
+}
+
+/* Forms */
+.form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+#registerForm,
+#addCandidateForm,
+#adminLoginForm {
+  grid-template-columns: 1fr 1fr;
+}
+
+#registerForm .btn,
+#addCandidateForm .btn,
+#adminLoginForm .btn {
+  grid-column: 1 / -1;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-family: inherit;
+  font-size: 14.5px;
+  color: var(--ink);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+#voterAddress {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+input::placeholder {
+  color: #a9a294;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px rgba(122, 31, 43, 0.11);
+}
+
+.steps {
+  margin: 20px 0 0;
+  padding: 16px 18px 16px 36px;
+  border-radius: 12px;
+  background: #f8f5ef;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.steps li {
+  margin-bottom: 7px;
+}
+
+.steps li:last-child {
+  margin-bottom: 0;
+}
+
+.steps li::marker {
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.status-list {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  margin: 0;
+  font-size: 14px;
+}
+
+.status-list dt {
+  padding: 12px 12px 12px 0;
+  border-top: 1px solid #f0ece3;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+}
+
+.status-list dd {
+  margin: 0;
+  padding: 12px 0;
+  border-top: 1px solid #f0ece3;
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
+
+/* Inline messages and the corner toast. */
+.message {
+  margin-top: 14px;
+  font-size: 13.5px;
+}
+
+.message:empty {
+  display: none;
+}
+
+.message-info {
+  padding: 12px 16px;
+  border: 1px solid #e3e7d9;
+  border-left: 3px solid #8a9a5b;
+  border-radius: 10px;
+  background: #f8f9f3;
+  color: #4f5838;
+}
+
+.message-ok {
+  padding: 12px 16px;
+  border: 1px solid #c6ddcf;
+  border-left: 3px solid var(--green);
+  border-radius: 10px;
+  background: #eef7f1;
+  color: var(--green);
+}
+
+.message-error {
+  padding: 12px 16px;
+  border: 1px solid #f0cfcf;
+  border-left: 3px solid var(--red);
+  border-radius: 10px;
+  background: #fbeded;
+  color: var(--red);
+}
+
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  max-width: 360px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: #1f242b;
+  color: #fff;
+  font-size: 13.5px;
+
+  z-index: 50;
+  box-shadow: var(--shadow-pop);
+
+  animation: toast-in 180ms ease-out;
+}
+
+.toast.is-error {
+  background: var(--red);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Candidate cards */
+.candidate-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.candidate-grid > .empty-note {
+  grid-column: 1 / -1;
+}
+
+.candidate {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+
+  transition: transform 160ms ease, box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.candidate:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  box-shadow: 0 2px 4px rgba(26, 29, 34, 0.05),
+    0 26px 46px -32px rgba(26, 29, 34, 0.45);
+}
+
+.candidate strong {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.candidate-position {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.candidate-votes {
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.candidate-votes b {
+  margin-left: 4px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.candidate .btn {
+  width: 100%;
+  margin-top: 12px;
+}
+
+/* The label is the clickable card, the radio stays hidden. */
+.ballot {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+.ballot > div {
+  position: relative;
+}
+
+.ballot > .empty-note {
+  grid-column: 1 / -1;
+}
+
+.ballot input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ballot-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  padding: 17px 19px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(26, 29, 34, 0.04);
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.ballot-option:hover {
+  border-color: var(--line-strong);
+  background: #fffdf8;
+}
+
+.ballot input[type="radio"]:checked + .ballot-option {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  box-shadow: 0 14px 26px -22px rgba(122, 31, 43, 0.85);
+}
+
+.ballot-dot {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  background: #fff;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.ballot input[type="radio"]:checked + .ballot-option .ballot-dot {
+  border-color: var(--brand);
+  background: var(--brand);
+  box-shadow: inset 0 0 0 4px #fff;
+}
+
+.ballot input[type="radio"]:focus-visible + .ballot-option {
+  outline: 2px solid rgba(122, 31, 43, 0.35);
+  outline-offset: 2px;
+}
+
+.ballot-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ballot-text strong {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.ballot-text span {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* Results */
+.sealed-panel {
+  padding: 52px 28px;
+  border: 1px dashed #d8cfbd;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #fffdf7, #fdfaf1);
+  text-align: center;
+}
+
+.sealed-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: #f6edd7;
+  color: var(--gold);
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: 0 0 0 6px rgba(168, 129, 58, 0.08);
+}
+
+.sealed-panel h3 {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.sealed-panel p {
+  max-width: 52ch;
+  margin: 0 auto;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.winner-banner {
+  padding: 26px 28px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--gold);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #fffdf6, #fdf8ec);
+  box-shadow: var(--shadow-card);
+}
+
+.winner-banner h3 {
+  font-size: clamp(26px, 2.6vw, 34px);
+  letter-spacing: -0.012em;
+  margin-bottom: 6px;
+}
+
+.winner-sub {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.results-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.result-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 170px;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(26, 29, 34, 0.04);
+}
+
+.result-rank {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #f3efe6;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.result-row:first-child .result-rank {
+  background: var(--brand);
+  color: #fff;
+}
+
+.result-name {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.result-name strong {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.bar-track {
+  height: 8px;
+  margin-top: 3px;
+  border-radius: 999px;
+  background: #efe9dd;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--brand), #a3384a);
+
+  transition: width 500ms ease;
+}
+
+.result-count {
+  text-align: right;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.result-count b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Admin panel */
+.admin-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 34px;
+  padding: 14px 18px;
+  margin-bottom: 22px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brand);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.admin-strip strong {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.pending-list {
+  display: grid;
+  gap: 10px;
+}
+
+.pending-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-tint);
+}
+
+.pending-info {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pending-info strong {
+  font-size: 13.5px;
+}
+
+.pending-info span {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Footer */
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 34px;
+  width: 100%;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 20px var(--gutter) 34px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.footer-label {
+  margin-right: 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.footer-note {
+  flex: 1 1 100%;
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+/* Narrower windows. Two columns become one, wide rows lose their bar. */
+@media (max-width: 1080px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  /* The one column every screen sits in. */
+  .page {
+    padding-top: 24px;
+    padding-bottom: 40px;
+  }
+
+  .page-head h2 {
+    font-size: 25px;
+  }
+
+  .status-list {
+    grid-template-columns: 120px minmax(0, 1fr);
+  }
+
+  .result-row {
+    grid-template-columns: 30px minmax(0, 1fr) 110px;
+    padding: 14px 16px;
+  }
+}
+
+@media (max-width: 720px) {
+  #registerForm,
+  #addCandidateForm,
+  #adminLoginForm {
+    grid-template-columns: 1fr;
+  }
+
+  /* The label is the clickable card, the radio stays hidden. */
+  .ballot {
+    grid-template-columns: 1fr;
+  }
+
+  /* Cards */
+  .card {
+    padding: 20px;
+  }
+
+  .site-header {
+    gap: 12px;
+    padding: 13px var(--gutter);
+  }
+
+  .wallet-box {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* Sticky top bar: brand row plus tab row. */
+  .masthead {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: #fff;
+  }
+}
+
+@media (max-width: 560px) {
+  .result-row {
+    grid-template-columns: 26px minmax(0, 1fr) 84px;
+  }
+
+  .bar-track {
+    display: none;
+  }
+
+  .toast {
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+    max-width: none;
+  }
+}
+
+    </style>
+
+    <!-- Ethers.js 5 from a CDN. It has to load before the script at the bottom. -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  </head>
+
+  <body>
+    <!-- Top bar: brand, wallet controls, tabs. Sticks to the top of the window. -->
+    <div class="masthead">
+      <header class="site-header">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">CV</span>
+          <div class="brand-text">
+            <h1>CampusVote</h1>
+            <p class="brand-sub">Student Council Election &middot; AY 2026&ndash;2027</p>
+          </div>
+        </div>
+        <div class="wallet-box">
+          <span id="networkBadge" class="network-badge">No wallet</span>
+          <span id="walletStatus" class="wallet-status">Wallet not connected</span>
+          <button id="connectButton" class="btn btn-primary" type="button">
+            Connect Wallet
+          </button>
+        </div>
+      </header>
+      <nav class="tab-bar" aria-label="Main sections">
+        <button class="tab is-active" data-view="view-register" type="button">
+          Voter Registration
+        </button>
+        <button class="tab" data-view="view-candidates" type="button">Candidates</button>
+        <button class="tab" data-view="view-vote" type="button">Cast Vote</button>
+        <button class="tab" data-view="view-results" type="button">Results</button>
+        <button class="tab" data-view="view-admin-login" type="button">Admin Login</button>
+        <button class="tab" data-view="view-admin" type="button">Admin Panel</button>
+      </nav>
+    </div>
+
+    <!-- Live election state, shared by every screen. -->
+    <div class="status-strip">
+      <div class="status-readouts">
+        <span id="electionStatus" class="pill pill-closed">Election status unknown</span>
+        <span id="totalVotes" class="status-total">Total votes: 0</span>
+      </div>
+      <button id="refreshButton" class="btn btn-ghost btn-small" type="button">
+        Refresh
+      </button>
+    </div>
+
+    <!-- Only shown when the page does not know the contract address yet. -->
+    <section id="setupPanel" class="setup-panel" hidden>
+      <div class="setup-text">
+        <h2>One last step: where is the contract?</h2>
+        <p>
+          Paste the address Remix gave you after deploying CampusVoting.sol.
+          It is saved in this browser, so you only do this once per computer.
+        </p>
+      </div>
+      <form id="setupForm" class="setup-form">
+        <input
+          id="setupAddress"
+          type="text"
+          spellcheck="false"
+          placeholder="0x0000000000000000000000000000000000000000"
+          aria-label="Deployed contract address"
+        />
+        <button class="btn btn-primary" type="submit">Save address</button>
+      </form>
+      <p id="setupMessage" class="message" role="status"></p>
+    </section>
+
+    <!-- All six screens. Only the one with is-active is visible. -->
+    <main class="page">
+      <!-- Screen 1: voter registration and login -->
+      <section id="view-register" class="view is-active">
+        <div class="page-head">
+          <p class="eyebrow">Step 1</p>
+          <h2>Voter Registration &amp; Login</h2>
+          <p class="lede">
+            Connect your wallet, send your details, and wait for the Electoral
+            Admin to approve you. Approval is what turns a wallet into a voter.
+          </p>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <h3 class="card-title">Register this wallet</h3>
+            <form id="registerForm" class="form-grid">
+              <label class="field">
+                <span class="field-label">Full name</span>
+                <input
+                  id="registerName"
+                  type="text"
+                  placeholder="Juan Dela Cruz"
+                  autocomplete="name"
+                  required
+                />
+              </label>
+              <label class="field">
+                <span class="field-label">Student number</span>
+                <input
+                  id="registerStudentId"
+                  type="text"
+                  placeholder="2026-00123"
+                  required
+                />
+              </label>
+              <button id="registerButton" class="btn btn-primary" type="submit">
+                Submit Registration
+              </button>
+            </form>
+            <ol class="steps">
+              <li>Your wallet address is saved on chain with your details.</li>
+              <li>The Electoral Admin sees you in the pending list.</li>
+              <li>Once approved, this wallet can vote exactly once.</li>
+            </ol>
+          </div>
+          <div class="card card-muted">
+            <h3 class="card-title">Your status</h3>
+            <dl class="status-list">
+              <dt>Wallet</dt>
+              <dd id="regWallet">&mdash;</dd>
+              <dt>Registered name</dt>
+              <dd id="regName">&mdash;</dd>
+              <dt>Student number</dt>
+              <dd id="regStudentId">&mdash;</dd>
+              <dt>Standing</dt>
+              <dd id="regState">&mdash;</dd>
+            </dl>
+            <button
+              id="goToVoteButton"
+              class="btn btn-primary btn-block"
+              type="button"
+              hidden
+            >
+              Enter the voting booth
+            </button>
+            <p id="registrationMessage" class="message" role="status"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen 2: candidate list -->
+      <section id="view-candidates" class="view">
+        <div class="page-head">
+          <p class="eyebrow">Step 2</p>
+          <h2>Candidates</h2>
+          <p class="lede">
+            Everyone running for Student Council. Vote counts are visible to
+            anyone, the contract has nothing to hide.
+          </p>
+        </div>
+        <p id="candidatesMeta" class="meta-line">No candidates loaded yet.</p>
+        <div id="candidateList" class="candidate-grid">
+          <p class="empty-note">Connect your wallet to load the ballot.</p>
+        </div>
+      </section>
+
+      <!-- Screen 3: the ballot. One wallet, one vote. -->
+      <section id="view-vote" class="view">
+        <div class="page-head">
+          <p class="eyebrow">Step 3</p>
+          <h2>Cast Your Vote</h2>
+          <p class="lede">
+            Pick one candidate and confirm. One wallet equals one vote and the
+            contract will not let you change your mind afterwards.
+          </p>
+        </div>
+        <p id="voteNotice" class="message message-info">
+          Connect your wallet to check your voting eligibility.
+        </p>
+        <div id="ballotList" class="ballot">
+          <p class="empty-note">The ballot is empty right now.</p>
+        </div>
+        <button
+          id="submitVoteButton"
+          class="btn btn-primary btn-wide"
+          type="button"
+          disabled
+        >
+          Submit my vote
+        </button>
+        <p id="voteMessage" class="message" role="status"></p>
+      </section>
+
+      <!-- Screen 4: results. Sealed until the admin closes the election. -->
+      <section id="view-results" class="view">
+        <div class="page-head">
+          <p class="eyebrow">Step 4</p>
+          <h2>Tabulation Results</h2>
+          <p class="lede">
+            The official count is released only after the Electoral Admin closes
+            the election, so no partial tally can influence a voter.
+          </p>
+        </div>
+        <div id="resultsLocked" class="sealed-panel">
+          <span class="sealed-mark" aria-hidden="true">&#9679;</span>
+          <h3>Results are still sealed</h3>
+          <p>
+            The ballot is open. Turnout is shown below, but the per candidate
+            breakdown stays hidden until the election is closed.
+          </p>
+        </div>
+        <div id="resultsPanel" hidden>
+          <div class="winner-banner">
+            <p class="eyebrow">Winner</p>
+            <h3 id="winnerName">&mdash;</h3>
+            <p id="winnerVotes" class="winner-sub">&mdash;</p>
+          </div>
+          <p id="resultsMeta" class="meta-line"></p>
+          <div id="resultsRows" class="results-rows"></div>
+        </div>
+      </section>
+
+      <!-- Screen 5: admin login. One premade Commission on Elections account. -->
+      <section id="view-admin-login" class="view">
+        <div class="page-head">
+          <p class="eyebrow">Restricted</p>
+          <h2>Electoral Admin Login</h2>
+          <p class="lede">
+            For the Commission on Elections account only. Logging in reveals the
+            admin panel and nothing else, transactions still require the owner
+            wallet.
+          </p>
+        </div>
+        <div class="card card-narrow">
+          <form id="adminLoginForm" class="form-grid">
+            <label class="field">
+              <span class="field-label">Username</span>
+              <input id="adminUsername" type="text" autocomplete="username" required />
+            </label>
+            <label class="field">
+              <span class="field-label">Password</span>
+              <input
+                id="adminPassword"
+                type="password"
+                autocomplete="current-password"
+                required
+              />
+            </label>
+            <button id="adminLoginButton" class="btn btn-primary" type="submit">
+              Log in
+            </button>
+          </form>
+          <p id="adminLoginMessage" class="message" role="status"></p>
+        </div>
+      </section>
+
+      <!-- Screen 6: admin panel. Every button maps to an onlyOwner function. -->
+      <section id="view-admin" class="view">
+        <div class="page-head">
+          <p class="eyebrow">Control room</p>
+          <h2>Electoral Admin Panel</h2>
+          <p class="lede">
+            Set up the ballot, approve voters, then open and close the election.
+            Each action is a transaction signed by the owner wallet.
+          </p>
+        </div>
+        <div class="admin-strip">
+          <span>Acting wallet: <strong id="adminWallet">&mdash;</strong></span>
+          <span>Election: <strong id="adminElectionStatus">&mdash;</strong></span>
+        </div>
+        <div class="two-col">
+          <div class="stack">
+            <div class="card">
+              <h3 class="card-title">Add a candidate</h3>
+              <p class="card-hint">
+                Only possible while the election is closed.
+              </p>
+              <form id="addCandidateForm" class="form-grid">
+                <label class="field">
+                  <span class="field-label">Candidate name</span>
+                  <input
+                    id="candidateName"
+                    type="text"
+                    placeholder="Juan Dela Cruz"
+                    required
+                  />
+                </label>
+                <label class="field">
+                  <span class="field-label">Position</span>
+                  <input
+                    id="candidatePosition"
+                    type="text"
+                    placeholder="Student Council President"
+                    required
+                  />
+                </label>
+                <button
+                  id="addCandidateButton"
+                  class="btn btn-primary"
+                  type="submit"
+                >
+                  Add candidate
+                </button>
+              </form>
+            </div>
+            <div class="card">
+              <h3 class="card-title">Authorize a voter</h3>
+              <p class="card-hint">
+                Paste a wallet address if it is not in the pending list.
+              </p>
+              <form id="authorizeForm" class="form-grid">
+                <label class="field">
+                  <span class="field-label">Voter wallet address</span>
+                  <input
+                    id="voterAddress"
+                    type="text"
+                    placeholder="0x0000000000000000000000000000000000000000"
+                    required
+                  />
+                </label>
+                <button
+                  id="authorizeVoterButton"
+                  class="btn btn-primary"
+                  type="submit"
+                >
+                  Authorize voter
+                </button>
+              </form>
+            </div>
+          </div>
+          <div class="stack">
+            <div class="card">
+              <h3 class="card-title">Election control</h3>
+              <p class="card-hint">
+                Starting locks the ballot. Closing freezes the count and
+                releases the results page.
+              </p>
+              <div class="button-row">
+                <button id="startElectionButton" class="btn btn-primary" type="button">
+                  Start voting
+                </button>
+                <button id="endElectionButton" class="btn btn-danger" type="button">
+                  Close voting
+                </button>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="card-title">Pending registrations</h3>
+              <p class="card-hint">
+                Voters who submitted the form and are waiting for approval.
+              </p>
+              <div id="pendingList" class="pending-list">
+                <p class="empty-note">Nothing pending.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p id="adminMessage" class="message" role="status"></p>
+        <button id="adminLogoutButton" class="btn btn-ghost" type="button">
+          Log out of admin
+        </button>
+      </section>
+    </main>
+
+    <!-- Which contract and network the page is talking to. -->
+    <footer class="site-footer">
+      <div>
+        <span class="footer-label">Contract</span>
+        <span id="contractAddressLabel" class="mono">&mdash;</span>
+        <button id="changeAddressButton" class="link-button" type="button">
+          change
+        </button>
+      </div>
+      <div>
+        <span class="footer-label">Network</span>
+        <span id="networkLabel" class="mono">&mdash;</span>
+      </div>
+      <p class="footer-note">
+        CampusVote &middot; Fin MCO project &middot; CampusVoting.sol deployed on
+        the Sepolia testnet
+      </p>
+    </footer>
+
+    <!-- Toast for transaction results. -->
+    <div id="toast" class="toast" role="alert" hidden></div>
+
+    <!-- All of the logic, pasted in. It sits at the bottom so every element
+      above already exists when it runs. -->
+    <script>
+// CampusVote logic. Talks to the contract through MetaMask and paints the
+// six screens.
+
+// The Remix address goes here, or paste it into the box on the page instead.
+const contractAddress = "PASTE_DEPLOYED_CONTRACT_ADDRESS_HERE";
+
+const contractABI = [
+  // admin writes
+  "function addCandidate(string name, string position)",
+  "function authorizeVoter(address voter)",
+  "function startElection()",
+  "function endElection()",
+
+  // voter writes
+  "function requestVoterRegistration(string name, string studentId)",
+  "function vote(uint256 candidateId)",
+
+  // reads used by the page
+  "function getCandidate(uint256 candidateId) view returns (uint256 id, string name, string position, uint256 voteCount, bool exists)",
+  "function getCandidateCount() view returns (uint256)",
+  "function getTotalVotes() view returns (uint256)",
+  "function getElectionStatus() view returns (bool)",
+  "function getRegistrationStatus(address voter) view returns (bool requested, bool authorized, bool voted, string name, string studentId)",
+  "function getRegistrationQueueLength() view returns (uint256)",
+  "function registrationQueue(uint256 index) view returns (address)",
+  "function authorizedVoterCount() view returns (uint256)",
+  "function owner() view returns (address)",
+];
+
+// Classroom shortcut. A real election would check this on a server.
+const ADMIN_USERNAME = "admin";
+const ADMIN_PASSWORD = "campusvote2026";
+
+// Where the setup box remembers the address.
+const STORAGE_KEY = "campusvote.contract.address";
+
+function looksLikeAddress(value) {
+  return /^0x[0-9a-fA-F]{40}$/.test(String(value || ""));
+}
+
+// The address set at the top wins, otherwise the one saved by the setup box.
+function pickContractAddress() {
+  if (looksLikeAddress(contractAddress)) return contractAddress;
+
+  try {
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    if (looksLikeAddress(saved)) return saved;
+  } catch (error) {
+    // Some browsers block storage for local files. The box just asks again.
+  }
+
+  return "";
+}
+
+let activeContractAddress = pickContractAddress();
+
+// Read only connection, then the wallet that signs, then the contract itself.
+let provider = null;
+let signer = null;
+let contract = null;
+
+let userAccount = null;
+let contractOwner = null;
+let adminLoggedIn = false;
+
+// Cached copy of this wallet's standing, so the vote button can explain itself.
+let voterStatus = { requested: false, authorized: false, voted: false, name: "", studentId: "" };
+
+// Every element the script touches, grabbed once.
+const connectButton = document.getElementById("connectButton");
+const refreshButton = document.getElementById("refreshButton");
+const walletStatus = document.getElementById("walletStatus");
+const networkBadge = document.getElementById("networkBadge");
+const electionStatus = document.getElementById("electionStatus");
+const totalVotes = document.getElementById("totalVotes");
+const candidateList = document.getElementById("candidateList");
+const candidatesMeta = document.getElementById("candidatesMeta");
+
+// registration screen
+const registerForm = document.getElementById("registerForm");
+const registerName = document.getElementById("registerName");
+const registerStudentId = document.getElementById("registerStudentId");
+const registrationMessage = document.getElementById("registrationMessage");
+const regWallet = document.getElementById("regWallet");
+const regName = document.getElementById("regName");
+const regStudentId = document.getElementById("regStudentId");
+const regState = document.getElementById("regState");
+const goToVoteButton = document.getElementById("goToVoteButton");
+
+// ballot screen
+const ballotList = document.getElementById("ballotList");
+const voteNotice = document.getElementById("voteNotice");
+const submitVoteButton = document.getElementById("submitVoteButton");
+const voteMessage = document.getElementById("voteMessage");
+
+// results screen
+const resultsLocked = document.getElementById("resultsLocked");
+const resultsPanel = document.getElementById("resultsPanel");
+const resultsMeta = document.getElementById("resultsMeta");
+const winnerName = document.getElementById("winnerName");
+const winnerVotes = document.getElementById("winnerVotes");
+const resultsRows = document.getElementById("resultsRows");
+
+// admin login
+const adminLoginForm = document.getElementById("adminLoginForm");
+const adminUsername = document.getElementById("adminUsername");
+const adminPassword = document.getElementById("adminPassword");
+const adminLoginMessage = document.getElementById("adminLoginMessage");
+
+// admin panel
+const addCandidateForm = document.getElementById("addCandidateForm");
+const candidateName = document.getElementById("candidateName");
+const candidatePosition = document.getElementById("candidatePosition");
+const authorizeForm = document.getElementById("authorizeForm");
+const voterAddress = document.getElementById("voterAddress");
+const startElectionButton = document.getElementById("startElectionButton");
+const endElectionButton = document.getElementById("endElectionButton");
+const pendingList = document.getElementById("pendingList");
+const adminWallet = document.getElementById("adminWallet");
+const adminElectionStatus = document.getElementById("adminElectionStatus");
+const adminMessage = document.getElementById("adminMessage");
+const adminLogoutButton = document.getElementById("adminLogoutButton");
+
+// footer and toast
+const contractAddressLabel = document.getElementById("contractAddressLabel");
+const networkLabel = document.getElementById("networkLabel");
+const toast = document.getElementById("toast");
+
+// setup box
+const setupPanel = document.getElementById("setupPanel");
+const setupForm = document.getElementById("setupForm");
+const setupAddress = document.getElementById("setupAddress");
+const setupMessage = document.getElementById("setupMessage");
+const changeAddressButton = document.getElementById("changeAddressButton");
+
+// Handlers, attached once at startup.
+connectButton.addEventListener("click", connectWallet);
+
+refreshButton.addEventListener("click", function () {
+  refreshEverything();
+  showToast("Data refreshed.");
+});
+
+// Tabs also keep the admin panel behind the login form.
+document.querySelectorAll(".tab").forEach(function (tabButton) {
+  tabButton.addEventListener("click", function () {
+    const targetView = tabButton.getAttribute("data-view");
+
+    if (targetView === "view-admin" && !adminLoggedIn) {
+      showView("view-admin-login");
+      setMessage(adminLoginMessage, "Log in first to reach the admin panel.", "error");
+      return;
+    }
+
+    showView(targetView);
+  });
+});
+
+registerForm.addEventListener("submit", function (event) {
+  event.preventDefault();
+  submitRegistration();
+});
+
+goToVoteButton.addEventListener("click", function () {
+  showView("view-vote");
+});
+
+submitVoteButton.addEventListener("click", submitVote);
+
+adminLoginForm.addEventListener("submit", function (event) {
+  event.preventDefault();
+  adminLogin();
+});
+
+addCandidateForm.addEventListener("submit", function (event) {
+  event.preventDefault();
+  addCandidate();
+});
+
+authorizeForm.addEventListener("submit", function (event) {
+  event.preventDefault();
+  authorizeVoter();
+});
+
+startElectionButton.addEventListener("click", startElection);
+endElectionButton.addEventListener("click", endElection);
+
+adminLogoutButton.addEventListener("click", function () {
+  adminLoggedIn = false;
+  showView("view-admin-login");
+  setMessage(adminLoginMessage, "Logged out of the admin panel.", "ok");
+});
+
+contractAddressLabel.textContent = activeContractAddress || "not set yet";
+
+if (!activeContractAddress) {
+  setupPanel.hidden = false;
+}
+
+setupForm.addEventListener("submit", function (event) {
+  event.preventDefault();
+  saveContractAddress();
+});
+
+changeAddressButton.addEventListener("click", function () {
+  setupAddress.value = activeContractAddress;
+  setupPanel.hidden = false;
+  setupAddress.focus();
+  setMessage(setupMessage, "", "");
+});
+
+// The MetaMask handshake.
+async function connectWallet() {
+  if (typeof window.ethereum === "undefined") {
+    setMessage(
+      registrationMessage,
+      "No wallet found. Install MetaMask from metamask.io in Chrome, Edge or Brave, " +
+        "then reload this page. Preview panes and in-app browsers cannot run wallet extensions.",
+      "error"
+    );
+    showToast("MetaMask is not installed in this browser.", true);
+    return;
+  }
+
+  if (typeof ethers === "undefined") {
+    showToast("Ethers.js did not load. Check your internet connection.", true);
+    return;
+  }
+
+  try {
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+
+    await provider.send("eth_requestAccounts", []);
+
+    signer = provider.getSigner();
+    userAccount = await signer.getAddress();
+
+    walletStatus.textContent = shortenAddress(userAccount);
+
+    await showNetwork();
+
+    if (!activeContractAddress) {
+      setupPanel.hidden = false;
+      showToast("Paste the contract address first. The box is at the top.", true);
+      return;
+    }
+
+    contract = new ethers.Contract(activeContractAddress, contractABI, signer);
+
+    contractOwner = await contract.owner();
+
+    await refreshEverything();
+
+    connectButton.textContent = "Connected";
+    connectButton.disabled = true;
+  } catch (error) {
+    showToast(explainError(error), true);
+  }
+}
+
+async function saveContractAddress() {
+  const typed = setupAddress.value.trim();
+
+  if (!looksLikeAddress(typed)) {
+    setMessage(
+      setupMessage,
+      "That does not look right. It should start with 0x and be 42 characters long.",
+      "error"
+    );
+    return;
+  }
+
+  activeContractAddress = typed;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, typed);
+  } catch (error) {
+    // Private modes can block storage. The page still works for this visit.
+  }
+
+  contractAddressLabel.textContent = typed;
+  setupPanel.hidden = true;
+  setMessage(setupMessage, "", "");
+  showToast("Contract address saved.");
+
+  if (userAccount && signer && typeof ethers !== "undefined") {
+    try {
+      contract = new ethers.Contract(activeContractAddress, contractABI, signer);
+      contractOwner = await contract.owner();
+      await refreshEverything();
+    } catch (error) {
+      showToast("Address saved, but the contract did not answer.", true);
+    }
+  }
+}
+
+// 11155111 is Sepolia. Anything else is a warning.
+async function showNetwork() {  const network = await provider.getNetwork();
+
+  if (network.chainId === 11155111) {
+    networkBadge.textContent = "Sepolia";
+    networkBadge.classList.add("is-good");
+    networkLabel.textContent = "Sepolia testnet (11155111)";
+  } else {
+    networkBadge.textContent = "Chain " + network.chainId;
+    networkBadge.classList.remove("is-good");
+    networkLabel.textContent = "Chain id " + network.chainId + " (not Sepolia)";
+  }
+}
+
+// Fires when the user picks a different account in MetaMask.
+if (typeof window.ethereum !== "undefined") {
+  window.ethereum.on("accountsChanged", function (accounts) {
+    if (accounts.length === 0) {
+      walletStatus.textContent = "Wallet not connected";
+      contract = null;
+      return;
+    }
+
+    userAccount = accounts[0];
+    walletStatus.textContent = shortenAddress(userAccount);
+    refreshEverything();
+  });
+}
+
+// Only the screen with is-active is shown, so switching never reloads.
+function showView(viewId) {
+  document.querySelectorAll(".view").forEach(function (view) {
+    view.classList.remove("is-active");
+  });
+
+  const target = document.getElementById(viewId);
+  if (target) {
+    target.classList.add("is-active");
+  }
+
+  document.querySelectorAll(".tab").forEach(function (tabButton) {
+    tabButton.classList.toggle("is-active", tabButton.getAttribute("data-view") === viewId);
+  });
+
+  if (viewId === "view-candidates") loadCandidates();
+  if (viewId === "view-vote") loadBallot();
+  if (viewId === "view-results") loadResults();
+  if (viewId === "view-admin") loadAdminPanel();
+}
+
+// Reads the chain and redraws whichever screen is open.
+async function refreshEverything() {
+  if (!contract) return;
+
+  await loadElectionStatus();
+  await loadRegistrationStatus();
+  await loadCandidates();
+
+  const openView = document.querySelector(".view.is-active");
+  if (openView) {
+    if (openView.id === "view-vote") await loadBallot();
+    if (openView.id === "view-results") await loadResults();
+    if (openView.id === "view-admin") await loadAdminPanel();
+  }
+}
+
+async function loadElectionStatus() {
+  if (!contract) return;
+
+  try {
+    const isOpen = await contract.getElectionStatus();
+    const votes = await contract.getTotalVotes();
+
+    electionStatus.textContent = isOpen ? "Election is OPEN" : "Election is CLOSED";
+    electionStatus.classList.toggle("pill-open", isOpen);
+    electionStatus.classList.toggle("pill-closed", !isOpen);
+
+    totalVotes.textContent = "Total votes: " + votes.toString();
+
+    adminElectionStatus.textContent = isOpen ? "open" : "closed";
+  } catch (error) {
+    electionStatus.textContent = "Cannot read the contract";
+    electionStatus.classList.add("pill-closed");
+  }
+}
+
+async function loadRegistrationStatus() {
+  if (!contract || !userAccount) return;
+
+  try {
+    const status = await contract.getRegistrationStatus(userAccount);
+
+    voterStatus = {
+      requested: status.requested,
+      authorized: status.authorized,
+      voted: status.voted,
+      name: status.name,
+      studentId: status.studentId,
+    };
+
+    regWallet.textContent = userAccount;
+    regName.textContent = voterStatus.name || "—";
+    regStudentId.textContent = voterStatus.studentId || "—";
+
+    // The three standings, written out in words instead of booleans.
+    if (voterStatus.voted) {
+      regState.textContent = "Approved, and this wallet has already voted";
+      goToVoteButton.hidden = true;
+    } else if (voterStatus.authorized) {
+      regState.textContent = "Approved. You may vote once.";
+      goToVoteButton.hidden = false;
+    } else if (voterStatus.requested) {
+      regState.textContent = "Waiting for the Electoral Admin to approve this wallet";
+      goToVoteButton.hidden = true;
+    } else {
+      regState.textContent = "Not registered yet";
+      goToVoteButton.hidden = true;
+    }
+
+    if (contractOwner && userAccount.toLowerCase() === contractOwner.toLowerCase()) {
+      adminWallet.textContent = shortenAddress(userAccount) + " (owner)";
+    } else {
+      adminWallet.textContent = userAccount ? shortenAddress(userAccount) : "—";
+    }
+  } catch (error) {
+    regState.textContent = "Could not read your status";
+  }
+}
+
+async function loadCandidates() {
+  if (!contract) {
+    candidateList.innerHTML = '<p class="empty-note">Connect your wallet to load the ballot.</p>';
+    return;
+  }
+
+  try {
+    const isOpen = await contract.getElectionStatus();
+    const count = await contract.getCandidateCount();
+    const total = Number(count.toString());
+
+    candidateList.innerHTML = "";
+
+    if (total === 0) {
+      candidateList.innerHTML = '<p class="empty-note">No candidates have been added yet.</p>';
+      candidatesMeta.textContent = "The ballot is empty.";
+      return;
+    }
+
+    candidatesMeta.textContent =
+      total + (total === 1 ? " candidate is" : " candidates are") + " on the ballot.";
+
+    for (let id = 1; id <= total; id++) {
+      const candidate = await contract.getCandidate(id);
+
+      candidateList.appendChild(buildCandidateCard(candidate, isOpen));
+    }
+  } catch (error) {
+    candidateList.innerHTML = '<p class="empty-note">Could not load the candidates.</p>';
+  }
+}
+
+function buildCandidateCard(candidate, isOpen) {
+  const card = document.createElement("div");
+  card.className = "candidate";
+
+  const name = document.createElement("strong");
+  name.textContent = candidate.name;
+
+  const position = document.createElement("span");
+  position.className = "candidate-position";
+  position.textContent = candidate.position;
+
+  const votes = document.createElement("p");
+  votes.className = "candidate-votes";
+  votes.innerHTML = "Votes so far: <b>" + candidate.voteCount.toString() + "</b>";
+
+  card.appendChild(name);
+  card.appendChild(position);
+  card.appendChild(votes);
+
+  if (isOpen) {
+    const voteButton = document.createElement("button");
+    voteButton.className = "btn btn-ghost btn-small";
+    voteButton.type = "button";
+    voteButton.textContent = "Vote for " + firstName(candidate.name);
+
+    voteButton.addEventListener("click", function () {
+      castVote(candidate.id);
+    });
+
+    card.appendChild(voteButton);
+  }
+
+  return card;
+}
+
+async function loadBallot() {
+  if (!contract || !userAccount) {
+    ballotList.innerHTML = '<p class="empty-note">Connect your wallet to see the ballot.</p>';
+    setMessage(voteNotice, "Connect your wallet to check your voting eligibility.", "info");
+    submitVoteButton.disabled = true;
+    return;
+  }
+
+  try {
+    const isOpen = await contract.getElectionStatus();
+    const count = Number((await contract.getCandidateCount()).toString());
+
+    if (!isOpen) {
+      setMessage(voteNotice, "The election is closed. The results have been released on the Results tab.", "info");
+    } else if (!voterStatus.authorized) {
+      setMessage(voteNotice, "This wallet is not on the approved voter list yet. Register, then wait for the admin.", "info");
+    } else if (voterStatus.voted) {
+      setMessage(voteNotice, "This wallet has already used its vote. One wallet, one vote.", "info");
+    } else {
+      setMessage(voteNotice, "You are approved to vote. Pick one candidate, then confirm.", "ok");
+    }
+
+    if (!isOpen || !voterStatus.authorized || voterStatus.voted) {
+      ballotList.innerHTML = '<p class="empty-note">The ballot is locked for this wallet.</p>';
+      submitVoteButton.disabled = true;
+      return;
+    }
+
+    if (count === 0) {
+      ballotList.innerHTML = '<p class="empty-note">No candidates have been added yet.</p>';
+      submitVoteButton.disabled = true;
+      return;
+    }
+
+    ballotList.innerHTML = "";
+    submitVoteButton.disabled = true;
+    submitVoteButton.textContent = "Submit my vote";
+
+    for (let id = 1; id <= count; id++) {
+      const candidate = await contract.getCandidate(id);
+      ballotList.appendChild(buildBallotOption(candidate));
+    }
+  } catch (error) {
+    ballotList.innerHTML = '<p class="empty-note">Could not load the ballot.</p>';
+  }
+}
+
+function buildBallotOption(candidate) {
+  const wrapper = document.createElement("div");
+
+  const radio = document.createElement("input");
+  radio.type = "radio";
+  radio.name = "ballot";
+  radio.id = "ballot-" + candidate.id;
+  radio.value = candidate.id.toString();
+
+  radio.addEventListener("change", function () {
+    submitVoteButton.disabled = false;
+  });
+
+  const label = document.createElement("label");
+  label.className = "ballot-option";
+  label.setAttribute("for", radio.id);
+
+  const dot = document.createElement("span");
+  dot.className = "ballot-dot";
+
+  const text = document.createElement("span");
+  text.className = "ballot-text";
+
+  const name = document.createElement("strong");
+  name.textContent = candidate.name;
+
+  const position = document.createElement("span");
+  position.textContent = candidate.position;
+
+  text.appendChild(name);
+  text.appendChild(position);
+  label.appendChild(dot);
+  label.appendChild(text);
+
+  wrapper.appendChild(radio);
+  wrapper.appendChild(label);
+
+  return wrapper;
+}
+
+// Sealed while the election is open. The ranking only appears after closing.
+async function loadResults() {
+  if (!contract) {
+    resultsLocked.hidden = false;
+    resultsPanel.hidden = true;
+    return;
+  }
+
+  try {
+    const isOpen = await contract.getElectionStatus();
+    const total = Number((await contract.getTotalVotes()).toString());
+    const approved = Number((await contract.authorizedVoterCount()).toString());
+    const count = Number((await contract.getCandidateCount()).toString());
+
+    if (isOpen) {
+      resultsLocked.hidden = false;
+      resultsPanel.hidden = true;
+
+      resultsLocked.querySelector("p").textContent =
+        "The ballot is open. " + total + " of " + approved + " approved voters have voted so far. " +
+        "The per candidate breakdown stays hidden until the election is closed.";
+      return;
+    }
+
+    resultsLocked.hidden = true;
+    resultsPanel.hidden = false;
+
+    const rows = [];
+    for (let id = 1; id <= count; id++) {
+      const candidate = await contract.getCandidate(id);
+      rows.push({
+        id: candidate.id.toString(),
+        name: candidate.name,
+        position: candidate.position,
+        votes: Number(candidate.voteCount.toString()),
+      });
+    }
+
+    rows.sort(function (a, b) {
+      return b.votes - a.votes;
+    });
+
+    if (rows.length > 0 && total > 0) {
+      const leader = rows[0];
+      winnerName.textContent = leader.name;
+      winnerVotes.textContent =
+        leader.position + " · " + leader.votes + " of " + total + " votes (" +
+        percent(leader.votes, total) + "%)";
+    } else if (rows.length > 0) {
+      winnerName.textContent = "No votes were cast";
+      winnerVotes.textContent = "The election closed with an empty tally.";
+    } else {
+      winnerName.textContent = "No candidates";
+      winnerVotes.textContent = "This election had no candidates.";
+    }
+
+    const turnout = approved > 0 ? percent(total, approved) : 0;
+    resultsMeta.textContent =
+      total + " total " + (total === 1 ? "vote" : "votes") + " from " + approved +
+      " approved " + (approved === 1 ? "voter" : "voters") + ". Turnout " + turnout + "%. Official count, election closed.";
+
+    resultsRows.innerHTML = "";
+    rows.forEach(function (row, index) {
+      const share = total > 0 ? percent(row.votes, total) : 0;
+
+      const rowElement = document.createElement("div");
+      rowElement.className = "result-row";
+
+      const rank = document.createElement("span");
+      rank.className = "result-rank";
+      rank.textContent = index + 1;
+
+      const nameBlock = document.createElement("div");
+      nameBlock.className = "result-name";
+
+      const nameLine = document.createElement("strong");
+      nameLine.textContent = row.name;
+
+      const positionLine = document.createElement("span");
+      positionLine.className = "candidate-position";
+      positionLine.textContent = row.position;
+
+      const track = document.createElement("div");
+      track.className = "bar-track";
+
+      const fill = document.createElement("div");
+      fill.className = "bar-fill";
+      // Inline because the width changes with every election.
+      fill.style.width = share + "%";
+
+      track.appendChild(fill);
+      nameBlock.appendChild(nameLine);
+      nameBlock.appendChild(positionLine);
+      nameBlock.appendChild(track);
+
+      const countBlock = document.createElement("div");
+      countBlock.className = "result-count";
+      countBlock.innerHTML = "<b>" + row.votes + "</b>" + share + "%";
+
+      rowElement.appendChild(rank);
+      rowElement.appendChild(nameBlock);
+      rowElement.appendChild(countBlock);
+      resultsRows.appendChild(rowElement);
+    });
+  } catch (error) {
+    resultsLocked.hidden = false;
+    resultsPanel.hidden = true;
+  }
+}
+
+async function loadAdminPanel() {
+  if (!contract || !adminLoggedIn) return;
+
+  try {
+    const isOpen = await contract.getElectionStatus();
+    const queueLength = Number((await contract.getRegistrationQueueLength()).toString());
+
+    const isOwner = contractOwner && userAccount &&
+      userAccount.toLowerCase() === contractOwner.toLowerCase();
+
+    startElectionButton.disabled = isOpen || !isOwner;
+    endElectionButton.disabled = !isOpen || !isOwner;
+
+    pendingList.innerHTML = "";
+
+    if (queueLength === 0) {
+      pendingList.innerHTML = '<p class="empty-note">Nothing pending.</p>';
+      return;
+    }
+
+    for (let index = 0; index < queueLength; index++) {
+      const address = await contract.registrationQueue(index);
+      const status = await contract.getRegistrationStatus(address);
+
+      if (status.authorized) continue;
+
+      pendingList.appendChild(buildPendingRow(address, status.name, status.studentId));
+    }
+
+    if (pendingList.innerHTML === "") {
+      pendingList.innerHTML = '<p class="empty-note">Every registration has been approved.</p>';
+    }
+  } catch (error) {
+    pendingList.innerHTML = '<p class="empty-note">Could not read the pending list.</p>';
+  }
+}
+
+function buildPendingRow(address, name, studentId) {
+  const row = document.createElement("div");
+  row.className = "pending-item";
+
+  const info = document.createElement("div");
+  info.className = "pending-info";
+
+  const nameLine = document.createElement("strong");
+  nameLine.textContent = name || "Unnamed request";
+
+  const detailLine = document.createElement("span");
+  detailLine.textContent = (studentId ? studentId + " · " : "") + address;
+
+  info.appendChild(nameLine);
+  info.appendChild(detailLine);
+
+  const approveButton = document.createElement("button");
+  approveButton.className = "btn btn-primary btn-small";
+  approveButton.type = "button";
+  approveButton.textContent = "Approve";
+
+  approveButton.addEventListener("click", function () {
+    approveVoter(address);
+  });
+
+  row.appendChild(info);
+  row.appendChild(approveButton);
+
+  return row;
+}
+
+async function submitRegistration() {
+  if (!contract || !userAccount) {
+    setMessage(registrationMessage, "Connect your wallet before registering.", "error");
+    return;
+  }
+
+  const name = registerName.value.trim();
+  const studentId = registerStudentId.value.trim();
+
+  if (name === "") {
+    setMessage(registrationMessage, "Please type your full name.", "error");
+    return;
+  }
+
+  if (voterStatus.authorized) {
+    setMessage(registrationMessage, "This wallet is already approved. You do not need to register again.", "ok");
+    return;
+  }
+
+  setMessage(registrationMessage, "Waiting for MetaMask confirmation...", "info");
+
+  try {
+    const transaction = await contract.requestVoterRegistration(name, studentId);
+
+    await transaction.wait();
+
+    setMessage(registrationMessage, "Registration submitted. The Electoral Admin will review it.", "ok");
+    showToast("Registration submitted on chain.");
+
+    registerForm.reset();
+    await loadRegistrationStatus();
+  } catch (error) {
+    setMessage(registrationMessage, explainError(error), "error");
+  }
+}
+
+async function castVote(candidateId) {
+  if (!contract) return;
+
+  if (!voterStatus.authorized) {
+    showToast("This wallet is not approved to vote yet.", true);
+    return;
+  }
+
+  if (voterStatus.voted) {
+    showToast("This wallet has already voted.", true);
+    return;
+  }
+
+  try {
+    const transaction = await contract.vote(candidateId);
+    await transaction.wait();
+
+    showToast("Vote recorded on chain.");
+    await refreshEverything();
+  } catch (error) {
+    showToast(explainError(error), true);
+  }
+}
+
+async function submitVote() {
+  const selected = document.querySelector('input[name="ballot"]:checked');
+
+  if (!selected) {
+    setMessage(voteMessage, "Pick a candidate first.", "error");
+    return;
+  }
+
+  submitVoteButton.disabled = true;
+  submitVoteButton.textContent = "Confirming in MetaMask...";
+  setMessage(voteMessage, "", "");
+
+  try {
+    const transaction = await contract.vote(selected.value);
+    await transaction.wait();
+
+    setMessage(voteMessage, "Vote recorded. Thank you for taking part.", "ok");
+    showToast("Vote recorded on chain.");
+
+    await refreshEverything();
+    await loadBallot();
+    await loadElectionStatus();
+  } catch (error) {
+    setMessage(voteMessage, explainError(error), "error");
+    submitVoteButton.textContent = "Submit my vote";
+    submitVoteButton.disabled = false;
+  }
+}
+
+// The premade Commission on Elections account.
+function adminLogin() {
+  const username = adminUsername.value.trim();
+  const password = adminPassword.value;
+
+  if (username === "" || password === "") {
+    setMessage(adminLoginMessage, "Fill in both fields.", "error");
+    return;
+  }
+
+  if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    setMessage(adminLoginMessage, "Wrong username or password.", "error");
+    return;
+  }
+
+  adminLoggedIn = true;
+  adminPassword.value = "";
+  setMessage(adminLoginMessage, "", "");
+  showView("view-admin");
+  showToast("Signed in as Electoral Admin.");
+}
+
+async function addCandidate() {
+  if (!contract) {
+    setMessage(adminMessage, "Connect the owner wallet first.", "error");
+    return;
+  }
+
+  const name = candidateName.value.trim();
+  const position = candidatePosition.value.trim();
+
+  if (name === "" || position === "") {
+    setMessage(adminMessage, "Both the name and the position are required.", "error");
+    return;
+  }
+
+  setMessage(adminMessage, "Waiting for MetaMask confirmation...", "info");
+
+  try {
+    const transaction = await contract.addCandidate(name, position);
+    await transaction.wait();
+
+    setMessage(adminMessage, "Candidate added: " + name, "ok");
+    showToast("Candidate added.");
+    addCandidateForm.reset();
+
+    await loadCandidates();
+    await loadAdminPanel();
+  } catch (error) {
+    setMessage(adminMessage, explainError(error), "error");
+  }
+}
+
+async function approveVoter(address) {
+  if (!contract) {
+    setMessage(adminMessage, "Connect the owner wallet first.", "error");
+    return;
+  }
+
+  setMessage(adminMessage, "Waiting for MetaMask confirmation...", "info");
+
+  try {
+    const transaction = await contract.authorizeVoter(address);
+    await transaction.wait();
+
+    setMessage(adminMessage, "Approved " + shortenAddress(address) + " as a voter.", "ok");
+    showToast("Voter approved.");
+    await loadAdminPanel();
+  } catch (error) {
+    setMessage(adminMessage, explainError(error), "error");
+  }
+}
+
+function authorizeVoter() {
+  const address = voterAddress.value.trim();
+
+  if (!ethers.utils.isAddress(address)) {
+    setMessage(adminMessage, "That does not look like a wallet address.", "error");
+    return;
+  }
+
+  approveVoter(address);
+  voterAddress.value = "";
+}
+
+async function startElection() {
+  if (!contract) return;
+
+  setMessage(adminMessage, "Waiting for MetaMask confirmation...", "info");
+
+  try {
+    const transaction = await contract.startElection();
+    await transaction.wait();
+
+    setMessage(adminMessage, "Voting is now open. Candidates and the voter list are locked.", "ok");
+    showToast("Election started.");
+    await refreshEverything();
+    await loadAdminPanel();
+  } catch (error) {
+    setMessage(adminMessage, explainError(error), "error");
+  }
+}
+
+async function endElection() {
+  if (!contract) return;
+
+  const sure = window.confirm("Close the election? No further votes will be accepted.");
+  if (!sure) return;
+
+  setMessage(adminMessage, "Waiting for MetaMask confirmation...", "info");
+
+  try {
+    const transaction = await contract.endElection();
+    await transaction.wait();
+
+    setMessage(adminMessage, "Election closed. The official results are now public.", "ok");
+    showToast("Election closed.");
+    await refreshEverything();
+    await loadAdminPanel();
+  } catch (error) {
+    setMessage(adminMessage, explainError(error), "error");
+  }
+}
+
+// Helpers.
+function shortenAddress(address) {
+  if (!address) return "—";
+  return address.slice(0, 6) + "..." + address.slice(-4);
+}
+
+function firstName(fullName) {
+  return (fullName || "candidate").split(" ")[0];
+}
+
+function percent(part, whole) {
+  if (!whole) return 0;
+  return Math.round((part / whole) * 1000) / 10;
+}
+
+function setMessage(element, text, type) {
+  if (!element) return;
+
+  element.textContent = text;
+  element.className = "message";
+
+  if (type) {
+    element.classList.add("message-" + type);
+  }
+}
+
+function showToast(text, isError) {
+  toast.textContent = text;
+  toast.classList.toggle("is-error", Boolean(isError));
+  toast.hidden = false;
+
+  // Clear the old timer so two quick clicks do not cut each other off.
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(function () {
+    toast.hidden = true;
+  }, isError ? 4200 : 2800);
+}
+
+// MetaMask hides the real reason a few layers deep.
+function explainError(error) {
+  let raw = "";
+
+  if (error && error.error && error.error.message) raw = error.error.message;
+  else if (error && error.data && error.data.message) raw = error.data.message;
+  else if (error && error.reason) raw = error.reason;
+  else if (error && error.message) raw = error.message;
+
+  if (raw === "") return "The transaction did not go through.";
+
+  raw = raw.replace("execution reverted: ", "").replace("MetaMask Tx Signature: ", "");
+
+  if (raw.length > 160) {
+    raw = raw.slice(0, 160) + "...";
+  }
+
+  return raw;
+}
+
+    </script>
+  </body>
+</html>
