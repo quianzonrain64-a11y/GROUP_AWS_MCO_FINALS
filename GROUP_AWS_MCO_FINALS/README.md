@@ -10,11 +10,14 @@ Built for the Fin MCO requirement: The Voting dApp.
 
 ## Group members
 
+
 | Name | Role |
 | --- | --- |
-| Quizon, FR Rain | Group leader |
+| Quianzon, Rain | Group leader |
+| Quizon, FR | Member |
 | Biteng, Guianne Marie B. | Member |
 | Gabor, Nelly Jane | Member |
+
 
 ---
 
